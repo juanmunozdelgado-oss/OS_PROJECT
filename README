@@ -46,3 +46,41 @@ You will need a RISC-V "newlib" tool chain from
 https://github.com/riscv/riscv-gnu-toolchain, and qemu compiled for
 riscv64-softmmu.  Once they are installed, and in your shell
 search path, you can run "make qemu".
+
+## PROBAR CAMBIOS
+## Priority Scheduling
+
+Este proyecto incluye una modificación del planificador de xv6 (Priority Scheduling),
+disponible en la rama `priority-scheduling`.
+
+### Compilar y ejecutar la versión modificada
+
+git checkout priority-scheduling
+make clean
+make CPUS=1 qemu
+
+### Probar el scheduler por prioridades
+
+Una vez dentro de xv6:
+
+    $ priotest
+
+Este programa crea 3 procesos con distinta prioridad (alta=0, normal=10, baja=19) y
+muestra el orden en que terminan. En la versión modificada, el proceso de mayor
+prioridad (A) siempre termina primero, sin importar el orden de creación.
+
+Para salir de QEMU: Ctrl+A, luego X.
+
+### Comparar contra la versión original (Round Robin)
+
+git checkout riscv
+make clean
+make CPUS=1 qemu
+
+Dentro de xv6:
+
+    $ priotest_base
+
+Nota: usamos `CPUS=1` para forzar que los procesos compitan por un único núcleo;
+con varios harts (el valor por defecto), cada proceso corre en paralelo y no se
+aprecia la diferencia entre los algoritmos de planificación.
