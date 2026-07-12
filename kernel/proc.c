@@ -124,6 +124,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->priority = DEFAULT_PRIORITY;   // <<< NUEVO: todo proceso nace con prioridad intermedia
 
   // Allocate a trapframe page.
   if ((p->trapframe = (struct trapframe *)kalloc()) == 0) {
@@ -428,35 +429,41 @@ scheduler(void)
   struct cpu *c = mycpu();
 
   c->proc = 0;
-  for (;;) {
-    // The most recent process to run may have had interrupts
-    // turned off; enable them to avoid a deadlock if all
-    // processes are waiting. Then turn them back off
-    // to avoid a possible race between an interrupt
-    // and wfi.
+  for(;;){
+    // Habilita interrupciones brevemente para evitar deadlock, luego las apaga
     intr_on();
     intr_off();
 
-    int found = 0;
-    for (p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if (p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
+    // <<< MODIFICACION: en vez de tomar el primer RUNNABLE que aparezca,
+    // escaneamos toda la tabla y nos quedamos con el de mejor prioridad
+    // (menor valor numerico). Es lo mismo escaneo lineal original, pero
+    // ahora comparamos prioridades antes de decidir.
+    struct proc *chosen = 0;
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
+    for(p = proc; p < &proc[NPROC]; p++) {
+      acquire(&p->lock);
+      if(p->state == RUNNABLE) {
+        if(chosen == 0 || p->priority < chosen->priority) {
+          // p es mejor candidato que el elegido hasta ahora
+          if(chosen != 0)
+            release(&chosen->lock);   // soltamos el candado del candidato anterior
+          chosen = p;                 // p pasa a ser el candidato; su lock queda tomado
+          continue;                   // OJO: no liberamos p->lock aqui
+        }
       }
       release(&p->lock);
     }
-    if (found == 0) {
-      // nothing to run; stop running on this core until an interrupt.
+
+    if(chosen != 0) {
+      // Cambiar al proceso elegido (identico al codigo original de aqui en adelante)
+      chosen->state = RUNNING;
+      c->proc = chosen;
+      swtch(&c->context, &chosen->context);
+
+      c->proc = 0;
+      release(&chosen->lock);
+    } else {
+      // Nadie listo: dormir el hart hasta la proxima interrupcion
       asm volatile("wfi");
     }
   }
@@ -498,6 +505,19 @@ yield(void)
   p->state = RUNNABLE;
   sched();
   release(&p->lock);
+}
+
+// <<< NUEVO: permite a un proceso cambiar su propia prioridad
+int
+setpriority(int priority)
+{
+  struct proc *p = myproc();
+  if(priority < 0 || priority > 19)
+    return -1;
+  acquire(&p->lock);
+  p->priority = priority;
+  release(&p->lock);
+  return 0;
 }
 
 // A fork child's very first scheduling by scheduler()
