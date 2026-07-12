@@ -109,7 +109,7 @@ sys_uptime(void)
 }
 
 uint64
-sys_setpriority(void)
+sys_setpriority(void) // <<< NUEVO
 {
   int priority;
   argint(0, &priority);

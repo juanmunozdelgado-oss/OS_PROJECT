@@ -42,4 +42,4 @@ entry("getpid");
 entry("sbrk");
 entry("pause");
 entry("uptime");
-entry("setpriority");
+entry("setpriority"); // <<< NUEVO
