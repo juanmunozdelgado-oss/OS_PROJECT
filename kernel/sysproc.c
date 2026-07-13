@@ -6,6 +6,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
+#include "kalloc.h" // MOD-MEM
 
 uint64
 sys_exit(void)
@@ -106,4 +107,24 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+// MOD-MEM: nuevo syscall. Recibe un puntero de usuario a struct meminfo
+// (definida en kalloc.h) y lo llena con las estadisticas actuales del
+// asignador de memoria fisica (kalloc.c): paginas libres/usadas/totales
+// y los contadores historicos de kalloc()/kfree().
+uint64
+sys_meminfo(void)
+{
+  uint64 addr; // puntero de usuario a struct meminfo
+  struct proc *p = myproc();
+  struct meminfo mi;
+
+  argaddr(0, &addr);
+
+  kmeminfo(&mi); // consulta atomica al estado de kmem en kalloc.c
+
+  if (copyout(p->pagetable, addr, (char *)&mi, sizeof(mi)) < 0)
+    return -1;
+  return 0;
 }
