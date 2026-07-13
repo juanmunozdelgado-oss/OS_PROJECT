@@ -13,6 +13,7 @@
 // estadisticas).
 
 #include "kernel/types.h"
+#include "kernel/param.h"
 #include "kernel/stat.h"
 #include "kernel/kalloc.h"
 #include "user/user.h"
@@ -23,6 +24,7 @@ void
 print_meminfo(char *label)
 {
   struct meminfo mi;
+  int i;
 
   if (meminfo(&mi) < 0) {
     printf("meminfo: syscall fallo\n");
@@ -35,6 +37,13 @@ print_meminfo(char *label)
   printf("  paginas en uso  : %ld\n", mi.used_pages);
   printf("  kalloc() total  : %ld\n", mi.alloc_count);
   printf("  kfree()  total  : %ld\n", mi.free_count);
+  printf("  libres por CPU  : ");
+  for (i = 0; i < NCPU; i++) {
+    printf("%ld", mi.free_pages_per_cpu[i]);
+    if (i < NCPU - 1)
+      printf(", ");
+  }
+  printf("\n");
 }
 
 int
