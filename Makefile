@@ -146,6 +146,7 @@ UPROGS=\
 	$U/_forphan\
 	$U/_dorphan\
         $U/_priotest_base\
+	$U/_meminfo\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
