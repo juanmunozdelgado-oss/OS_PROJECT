@@ -1,48 +1,169 @@
-xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
-Version 6 (v6).  xv6 loosely follows the structure and style of v6,
-but is implemented for a modern RISC-V multiprocessor using ANSI C.
+# Proyecto Final — Sistemas Operativos (xv6-riscv)
+**Universidad del Valle · Escuela de Ingeniería de Sistemas y Computación · 2026-1**
+**Curso:** Sistemas Operativos — 01 · **Docente:** Peña Torres Jefferson Amado
 
-ACKNOWLEDGMENTS
+Exploración y modificación de los algoritmos de planificación de CPU y gestión de
+memoria física en **xv6-riscv**, el sistema operativo académico del MIT.
 
-xv6 is inspired by John Lions's Commentary on UNIX 6th Edition (Peer
-to Peer Communications; ISBN: 1-57398-013-7; 1st edition (June 14,
-2000)).  See also https://pdos.csail.mit.edu/6.1810/, which provides
-pointers to on-line resources for v6.
+## Integrantes
 
-The following people have made contributions: Russ Cox (context switching,
-locking), Cliff Frey (MP), Xiao Yu (MP), Nickolai Zeldovich, and Austin
-Clements.
+| Nombre | Código |
+|---|---|
+| Andres Felipe Muñoz Moreno | 2438908 |
+| William Rooselbelt May Barreto | 2435731 |
+| Juan Manuel Muñoz Delgado | 2436424 |
+| Miguel Angel Martinez Eraso | [Código] |
+| Samuel Saldaña Giraldo | [Código] |
 
-We are also grateful for the bug reports and patches contributed by
-Abhinavpatel00, Takahiro Aoyagi, Marcelo Arroyo, Hirbod Behnam, Silas
-Boyd-Wickizer, Anton Burtsev, carlclone, Ian Chen, clivezeng, Dan
-Cross, Cody Cutler, Mike CAT, Tej Chajed, Asami Doi,Wenyang Duan,
-echtwerner, eyalz800, Nelson Elhage, Saar Ettinger, Alice Ferrazzi,
-Nathaniel Filardo, flespark, Peter Froehlich, Yakir Goaron, Shivam
-Handa, Matt Harvey, Bryan Henry, jaichenhengjie, Jim Huang, Matúš
-Jókay, John Jolly, Alexander Kapshuk, Anders Kaseorg, kehao95,
-Wolfgang Keller, Jungwoo Kim, Jonathan Kimmitt, Eddie Kohler, Vadim
-Kolontsov, Austin Liew, Bruce Lowekamp, l0stman, Pavan Maddamsetti,
-Imbar Marinescu, Yandong Mao, Matan Shabtay, Hitoshi Mitake, Carmi
-Merimovich, mes900903, Mark Morrissey, mtasm, Joel Nider, Hayato Ohhashi,
-OptimisticSide, papparapa, phosphagos, Harry Porter, Greg Price, Zheng
-qhuo, Quancheng, RayAndrew, Jude Rich, segfault, Ayan Shafqat, Eldar
-Sehayek, Yongming Shen, Fumiya Shigemitsu, snoire, Taojie, Cam Tenny,
-tyfkda, Warren Toomey, Stephen Tu, Alissa Tung, Rafael Ubal, unicornx,
-Amane Uehara, Pablo Ventura, Luc Videau, Xi Wang, WaheedHafez, Keiichi
-Watanabe, Lucas Wolf, Nicolas Wolovick, wxdao, Grant Wu, x653, Andy
-Zhang, Jindong Zhang, Icenowy Zheng, ZhUyU1997, and Zou Chang Wei.
+## ¿Qué se hizo?
 
-ERROR REPORTS
+Se analizaron en profundidad dos componentes del kernel de xv6 y se implementó
+una modificación sobre cada uno:
 
-Please send errors and suggestions to Frans Kaashoek and Robert Morris
-(kaashoek,rtm@mit.edu).  The main purpose of xv6 is as a teaching
-operating system for MIT's 6.1810, so we are more interested in
-simplifications and clarifications than new features.
+1. **Planificador de CPU (scheduler).** xv6 usa originalmente Round Robin puro.
+   Se implementó **Priority Scheduling**, agregando un campo de prioridad a
+   cada proceso y una syscall `setpriority()` para modificarla desde espacio
+   de usuario.
+2. **Gestión de memoria física (`kalloc.c`).** xv6 usa originalmente una
+   única freelist global protegida por un solo candado. Se implementaron
+   **freelists independientes por CPU** con *work stealing* entre ellas, y
+   una syscall `meminfo()` para exponer estadísticas de uso de memoria.
 
-BUILDING AND RUNNING XV6
+## Estructura del repositorio: ramas
 
-You will need a RISC-V "newlib" tool chain from
-https://github.com/riscv/riscv-gnu-toolchain, and qemu compiled for
+El proyecto se organiza en tres ramas, cada una compilable y ejecutable de
+forma independiente:
+
+| Rama | Contenido |
+|---|---|
+| `riscv` | xv6 original, sin modificaciones. Sirve como línea base de comparación. |
+| `priority-scheduling` | Modificación del planificador (Priority Scheduling) sobre `kernel/proc.c` y `kernel/proc.h`. |
+| `meminfo-syscall` | Modificación del manejo de memoria (freelists por-CPU + syscall `meminfo`) sobre `kernel/kalloc.c`. |
+
+Todos los cambios respecto al xv6 original están marcados en el código con
+los comentarios `// <<< NUEVO`, `// <<< MODIFICACION` o `// MOD-MEM`, según
+la rama.
+
+## Requisitos previos
+
+- **Windows con WSL2 + Ubuntu**, o una instalación nativa de Ubuntu/Debian.
+- Compilador cruzado para RISC-V (`gcc-riscv64-linux-gnu`).
+- Emulador **QEMU** para RISC-V de 64 bits (`qemu-system-riscv64`).
+
+### Instalación de WSL2 con Ubuntu (solo Windows)
+
+Desde PowerShell como administrador:
+
+```bash
+wsl --install -d Ubuntu
+```
+
+Reinicia el equipo y configura tu usuario y contraseña de Ubuntu desde el
+menú de inicio.
+
+### Instalación de dependencias (dentro de Ubuntu/WSL2)
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+
+# Herramientas basicas de compilacion y control de versiones
+sudo apt install -y git build-essential gdb-multiarch
+
+# Cadena de herramientas cruzada para RISC-V (gcc, binutils)
+sudo apt install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu
+
+# Emulador QEMU para RISC-V de 64 bits
+sudo apt install -y qemu-system-misc
+```
+
+Verifica que todo quedó instalado:
+
+```bash
+riscv64-linux-gnu-gcc --version
+qemu-system-riscv64 --version
+```
+
+Si el `Makefile` no encuentra el compilador (busca por defecto el prefijo
+`riscv64-unknown-elf-`), exporta el prefijo correcto antes de compilar:
+
+```bash
+export TOOLPREFIX=riscv64-linux-gnu-
+```
+
+## Clonar el repositorio
+
+```bash
+git clone https://github.com/juanmunozdelgado-oss/OS_PROJECT.git
+cd OS_PROJECT
+```
+
+Para cambiar entre ramas (por ejemplo, para probar la modificación del
+planificador):
+
+```bash
+git checkout priority-scheduling
+```
+
+## Compilar y ejecutar
+
+Compilar el kernel y los programas de usuario:
+
+```bash
+make
+```
+
+Ejecutar en modo consola (recomendado en WSL2):
+
+```bash
+make qemu-nox
+```
+
+Ejecutar forzando una sola CPU (necesario para las pruebas comparativas del
+planificador, para que los procesos compitan de verdad por un único núcleo):
+
+```bash
+make CPUS=1 qemu-nox
+```
+
+Para salir de QEMU: `Ctrl+A` seguido de `X`.
+
+Para limpiar archivos de una compilación anterior (útil al cambiar de rama):
+
+```bash
+make clean
+```
+
+## Programas de prueba
+
+| Programa | Rama | Descripción |
+|---|---|---|
+| `priotest_base` | `riscv` | Crea 3 procesos CPU-bound y mide su orden/tiempo de finalización con el scheduler original (Round Robin). |
+| `priotest` | `priority-scheduling` | Igual al anterior, pero cada proceso hijo llama a `setpriority()` (alta / normal / baja) para probar el nuevo scheduler. |
+| `meminfo` | `meminfo-syscall` | Reporta estadísticas de memoria: páginas totales, libres, en uso, y desglose de páginas libres por CPU. |
+
+Ejemplo de uso dentro de xv6:
+
+```bash
+$ priotest
+$ meminfo test 200
+```
+
+## Solución de problemas comunes
+
+| Error | Causa / solución |
+|---|---|
+| `riscv64-unknown-elf-gcc: command not found` | Exportar `TOOLPREFIX=riscv64-linux-gnu-` antes de compilar. |
+| `qemu-system-riscv64: command not found` | Reinstalar con `sudo apt install -y qemu-system-misc` y verificar con `which qemu-system-riscv64`. |
+| `Permission denied` al clonar o hacer push | GitHub ya no acepta contraseña por HTTPS; usar un Personal Access Token (PAT) o configurar SSH (`ssh-keygen`). |
+| xv6 se cuelga tras `make qemu-nox` sin mostrar el prompt | `fs.img` puede estar corrupto por una compilación previa fallida. Ejecutar `make clean` y luego `make` de nuevo. |
+| `panic: ...` al arrancar tras una modificación | Una modificación del kernel violó un invariante interno. Revisar el último cambio antes de recompilar. |
+
+## Referencias
+
+- Cox, R., Kaashoek, F., & Morris, R. (2011). *xv6: A simple, Unix-like teaching operating system*. MIT CSAIL. https://pdos.csail.mit.edu/6.828/2012/xv6.html
+- xv6-riscv — MIT's Operating Systems Engineering. *xv6-riscv Source Code*. https://github.com/mit-pdos/xv6-riscv.git
+- Silberschatz, A., Galvin, P. B., & Gagne, G. (2018). *Operating System Concepts* (10th ed.). Wiley.
+- Tanenbaum, A. S., & Bos, H. (2014). *Modern Operating Systems* (4th ed.). Pearson.
 riscv64-softmmu.  Once they are installed, and in your shell
 search path, you can run "make qemu".
