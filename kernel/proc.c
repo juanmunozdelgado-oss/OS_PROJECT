@@ -455,7 +455,7 @@ scheduler(void)
     }
 
     if(chosen != 0) {
-      // Cambiar al proceso elegido (identico al codigo original de aqui en adelante)
+      // Cambiar al proceso elegido
       chosen->state = RUNNING;
       c->proc = chosen;
       swtch(&c->context, &chosen->context);
