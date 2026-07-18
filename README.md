@@ -13,7 +13,7 @@ memoria física en **xv6-riscv**, el sistema operativo académico del MIT.
 | William Rooselbelt May Barreto | 2435731 |
 | Juan Manuel Muñoz Delgado | 2436424 |
 | Miguel Angel Martinez Eraso | 2437814 |
-| Samuel Saldaña Giraldo | [Código] |
+| Samuel Saldaña Giraldo | 2437631 |
 
 ## ¿Qué se hizo?
 
