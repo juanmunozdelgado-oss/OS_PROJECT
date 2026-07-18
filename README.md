@@ -91,6 +91,25 @@ Si el `Makefile` no encuentra el compilador (busca por defecto el prefijo
 export TOOLPREFIX=riscv64-linux-gnu-
 ```
 
+## ⚠️ Importante: archivo `README` sin extensión
+
+El `Makefile` de xv6 necesita un archivo llamado exactamente `README`
+(sin extensión) en la raíz del proyecto, porque lo incluye dentro de
+`fs.img` como parte del sistema de archivos de xv6. Este archivo `README.md`
+es aparte, solo para que GitHub lo renderice — **ambos deben existir al
+mismo tiempo** en la raíz del repositorio. Si por error se borra o se
+renombra el `README` sin extensión, `make` fallará con:
+
+```
+make: *** No rule to make target 'README', needed by 'fs.img'.  Stop.
+```
+
+Para regenerarlo a partir de este archivo:
+
+```bash
+cp README.md README
+```
+
 ## Clonar el repositorio
 
 ```bash
