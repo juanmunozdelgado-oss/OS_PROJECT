@@ -12,7 +12,7 @@ memoria física en **xv6-riscv**, el sistema operativo académico del MIT.
 | Andres Felipe Muñoz Moreno | 2438908 |
 | William Rooselbelt May Barreto | 2435731 |
 | Juan Manuel Muñoz Delgado | 2436424 |
-| Miguel Angel Martinez Eraso | [Código] |
+| Miguel Angel Martinez Eraso | 2437814 |
 | Samuel Saldaña Giraldo | [Código] |
 
 ## ¿Qué se hizo?
@@ -116,14 +116,14 @@ make
 Ejecutar en modo consola (recomendado en WSL2):
 
 ```bash
-make qemu-nox
+make qemu
 ```
 
 Ejecutar forzando una sola CPU (necesario para las pruebas comparativas del
 planificador, para que los procesos compitan de verdad por un único núcleo):
 
 ```bash
-make CPUS=1 qemu-nox
+make CPUS=1 qemu
 ```
 
 Para salir de QEMU: `Ctrl+A` seguido de `X`.
@@ -156,7 +156,7 @@ $ meminfo test 200
 | `riscv64-unknown-elf-gcc: command not found` | Exportar `TOOLPREFIX=riscv64-linux-gnu-` antes de compilar. |
 | `qemu-system-riscv64: command not found` | Reinstalar con `sudo apt install -y qemu-system-misc` y verificar con `which qemu-system-riscv64`. |
 | `Permission denied` al clonar o hacer push | GitHub ya no acepta contraseña por HTTPS; usar un Personal Access Token (PAT) o configurar SSH (`ssh-keygen`). |
-| xv6 se cuelga tras `make qemu-nox` sin mostrar el prompt | `fs.img` puede estar corrupto por una compilación previa fallida. Ejecutar `make clean` y luego `make` de nuevo. |
+| xv6 se cuelga tras `make qemu` sin mostrar el prompt | `fs.img` puede estar corrupto por una compilación previa fallida. Ejecutar `make clean` y luego `make` de nuevo. |
 | `panic: ...` al arrancar tras una modificación | Una modificación del kernel violó un invariante interno. Revisar el último cambio antes de recompilar. |
 
 ## Referencias
